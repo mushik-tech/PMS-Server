@@ -20,32 +20,9 @@ const transporter = nodemailer.createTransport({
 });
 
 const admin = require("firebase-admin");
-
-let serviceAccount;
-const fbServiceKey = process.env.FB_SERVICE_KEY;
-const fbServiceFile = process.env.FB_SERVICE_FILE;
-
-try {
-    if (fbServiceFile) {
-        const fileContent = fs.readFileSync(fbServiceFile, 'utf8');
-        serviceAccount = JSON.parse(fileContent);
-    } else if (fbServiceKey) {
-        const trimmed = fbServiceKey.trim();
-
-        if (trimmed.startsWith('{')) {
-            serviceAccount = JSON.parse(trimmed);
-        } else {
-            const decoded = Buffer.from(trimmed, 'base64').toString('utf8');
-            serviceAccount = JSON.parse(decoded);
-        }
-    } else {
-        throw new Error('FB_SERVICE_KEY or FB_SERVICE_FILE must be provided');
-    }
-}
-catch (err) {
-    console.error('Firebase service account load failed:', err.message);
-    process.exit(1);
-}
+const serviceAccount = JSON.parse(
+  Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString("utf-8")
+);
 
 
 admin.initializeApp({
@@ -102,7 +79,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const db = client.db('zap_shift_db');
         const userCollection = db.collection('users');
@@ -1035,8 +1012,8 @@ app.get('/admin/stats/alerts-invoices', verifyFBToken, verifyAdmin, async (req, 
 });
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
@@ -1048,7 +1025,4 @@ app.get('/', (req, res) => {
     res.send('zap is shifting shifting!')
 })
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
 
